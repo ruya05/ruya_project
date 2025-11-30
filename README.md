@@ -1,4 +1,13 @@
-# RuYa
+# RuYa by Team QIYAS (CSIT321)
+
+| Role | Name | Student ID | Email |
+|------|------|------------|-------|
+| Project Leader | Abid Edavana Zakir | 7791021 | aez941@uowmail.edu.au |
+| Project Scribe | Raphael Dypiangco | 7773584 | rad129@uowmail.edu.au |
+| Team Member | Mehul Puthuran | 7771186 | mp317@uowmail.edu.au |
+| Team Member | Mustafa Bohra | 7846745 | mmab580@uowmail.edu.au |
+| Team Member | Sondos el shatlawy | 7679336 | sae580@uowmail.edu.au |
+| Team Member | Nabiha Talat | 8028953 | nt613@uowmail.edu.au |
 
 the github will be spit into multiple branches as this project is a combination of multiple isolated parts,this is the VR side Branch.
 
