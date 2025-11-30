@@ -102,56 +102,33 @@ Copy code
 
 ### ESP32 Setup
 
-1. Open `arduinoide_sketch.ino` in Arduino IDE
-2. Configure WiFi credentials:
+- 1. Open `arduinoide_sketch.ino` in Arduino IDE
+- 2. Configure WiFi credentials
+- const char* ssid = "YOUR_WIFI_SSID";
+- const char* password = "YOUR_WIFI_PASSWORD";
+- Configure Firebase credentials in C++:
+- Upload the sketch to ESP32
+- Optional: Run calibration_sketch.ino for sensor calibration
 
-
-const char* ssid = "YOUR_WIFI_SSID";
-const char* password = "YOUR_WIFI_PASSWORD";
-Configure Firebase credentials in C++:
-
-cpp
-Copy code
-#define FIREBASE_HOST "your-project-id.firebaseio.com"
-#define FIREBASE_AUTH "your-database-secret"
-Upload the sketch to ESP32
-
-Optional: Run calibration_sketch.ino for sensor calibration
-
-WebApp Setup
-Open the WebApp/ folder in your editor
-
-Configure Firebase in config.js:
-
-javascript
-Copy code
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "your-project-id.firebaseapp.com",
-  databaseURL: "https://your-project-id.firebaseio.com",
-  projectId: "your-project-id",
-  storageBucket: "your-project-id.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
-};
-Open index.html in a browser or deploy via Firebase Hosting
+### WebApp Setup
+- Open the WebApp/ folder in your editor
+- Open index.html in a browser or deploy via Firebase Hosting
 
 ## Project Structure
-bash
-Copy code
-Ruya_WebandESP_Code/
-├── ESP32_Code/
-│   ├── arduinoide_sketch.ino       # Main sensor reading and Firebase push code
-│   └── calibration_sketch.ino      # Sensor calibration code
-├── WebApp/
-│   ├── index.html                  # Main dashboard page
-│   ├── setting.html                # Settings page
-│   ├── profile.html                # Profile page
-│   ├── style.css                   # Dashboard styling
-│   ├── leaflet.css                 # Map styling for sensors
-│   ├── app.js                      # Main JS for Firebase fetching & charting
-│   └── config.js                   # Firebase configuration
-└── README.md                       # Project overview and instructions
+
+- Ruya_WebandESP_Code/
+- ├── ESP32_Code/
+- │   ├── arduinoide_sketch.ino       # Main sensor reading and Firebase push code
+- │   └── calibration_sketch.ino      # Sensor calibration code
+- ├── WebApp/
+- │   ├── index.html                  # Main dashboard page
+- │   ├── setting.html                # Settings page
+- │   ├── profile.html                # Profile page
+- │   ├── style.css                   # Dashboard styling
+- │   ├── leaflet.css                 # Map styling for sensors
+- │   ├── app.js                      # Main JS for Firebase fetching & charting
+- │   └── config.js                   # Firebase configuration
+- └── README.md                       # Project overview and instructions
 
 ## Usage Guide
 - Power ESP32 with sensors connected
@@ -167,24 +144,24 @@ Dashboard Features:
 - Supports multiple sensors simultaneously
 
 ## Configuration Parameters
-Parameter	Default	Description
-sensorReadInterval	2000ms	Interval between sensor readings
-gasThresholds	See code	Thresholds for each gas sensor (PPM)
-wifiReconnectInterval	5000ms	Time before attempting WiFi reconnect
-firebaseWriteInterval	2000ms	Frequency of sending data to Firebase
+- Parameter	Default	Description
+- sensorReadInterval	2000ms	Interval between sensor readings
+- gasThresholds	See code	Thresholds for each gas sensor (PPM)
+- wifiReconnectInterval	5000ms	Time before attempting WiFi reconnect
+- firebaseWriteInterval	2000ms	Frequency of sending data to Firebase
 
 ## Security Considerations
-Firebase rules restrict unauthorized writes
-ESP32 connects via WPA2-secured WiFi
-Only authorized WebApp clients can read live data
-API keys and credentials must not be exposed publicly
+- Firebase rules restrict unauthorized writes
+- ESP32 connects via WPA2-secured WiFi
+- Only authorized WebApp clients can read live data
+- API keys and credentials must not be exposed publicly
 
 ## Troubleshooting
-ESP32 Issues:
-Verify WiFi credentials
-Monitor serial output for errors
-Confirm Firebase database URL is correct
+- ESP32 Issues:
+- Verify WiFi credentials
+- Monitor serial output for errors
+- Confirm Firebase database URL is correct
 
-WebApp Issues:
-No live data → Check Firebase config and database rules
-Charts not updating → Refresh browser, check console
+### WebApp Issues:
+- No live data → Check Firebase config and database rules
+- Charts not updating → Refresh browser, check console
