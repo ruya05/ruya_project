@@ -37,7 +37,7 @@ Real-time teleoperation of hexapod robot via Meta Quest Pro with secure cloud au
 
 ## Overview
 
-This project implements a secure, low-latency VR teleoperation system for controlling a quadruped robot (Hiwonder Jethexa) using Meta Quest Pro. The system enables remote operation in hazardous environments with real-time video feedback and environmental monitoring.
+This project implements a secure, low-latency VR teleoperation system for controlling a hexapod robot (Hiwonder Jethexa) using Meta Quest Pro. The system enables remote operation in hazardous environments with real-time video feedback and environmental monitoring.
 
 **Use Cases:**
 - Industrial inspection in hazardous areas
