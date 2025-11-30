@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ru’ya • Settings</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <script src="js/theme.js"></script>
+  <script>try { applySavedTheme(); } catch(e) {}</script>
+</head>
+<body class="min-h-screen flex flex-col">
+  <header class="bg-black bg-opacity-90 border-b border-green-800">
+    <div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <img src="logo.png" data-dark-logo="logo.png" data-light-logo="logo-light.png" alt="Ruya Logo" class="logo-img w-12 h-12" />
+        <h1 class="text-xl font-bold text-green-500">Settings</h1>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1">
+    <div class="max-w-3xl mx-auto p-6 space-y-8">
+      <!-- Account -->
+      <section class="bg-gray-900 bg-opacity-80 p-6 rounded-2xl border border-green-800">
+        <h2 class="text-lg font-semibold text-green-400 mb-4">Account</h2>
+        <div class="space-y-4">
+          <div>
+            <label for="display-name" class="block text-sm text-gray-300 mb-1">Display Name</label>
+            <input id="display-name" type="text" class="w-full p-3 rounded-lg bg-black border border-green-700 text-white" placeholder="Enter display name" />
+          </div>
+          <div class="flex flex-wrap gap-3">
+            <button id="save-display-name" class="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg transition-colors">Save Changes</button>
+            <button id="change-password" class="bg-gray-700 hover:bg-gray-600 text-white px-5 py-2 rounded-lg transition-colors">Change Password</button>
+          </div>
+          <div id="account-status" class="text-sm mt-1"></div>
+        </div>
+      </section>
+
+      <!-- Alert Control System -->
+      <section class="bg-gray-900 bg-opacity-80 p-6 rounded-2xl border border-green-800">
+        <h2 class="text-lg font-semibold text-green-400 mb-4">Alert Control System</h2>
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-white font-medium">Enable Alerts</p>
+            <p id="alert-status" class="text-sm text-gray-400">Alerts are enabled.</p>
+          </div>
+          <label class="inline-flex items-center cursor-pointer select-none">
+            <input type="checkbox" id="alerts-toggle" class="sr-only" />
+            <span class="w-12 h-6 flex items-center bg-gray-700 rounded-full p-1 transition-colors">
+              <span id="toggle-knob" class="w-4 h-4 bg-white rounded-full transform transition-transform"></span>
+            </span>
+          </label>
+        </div>
+      </section>
+
+      <!-- Navigation -->
+      <div class="pt-2 text-center">
+        <a id="back-to-dashboard" href="index.html" class="inline-block bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg transition-colors">Back to Dashboard</a>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    // Apply saved theme on standalone page
+    try { applySavedTheme(); } catch (_) {}
+    let authedUser = null;
+    function setStatus(el, message, ok = true) {
+      el.textContent = message;
+      el.className = 'text-sm mt-1 ' + (ok ? 'text-green-400' : 'text-red-400');
+    }
+
+    function syncToggleUI(enabled) {
+      const checkbox = document.getElementById('alerts-toggle');
+      const knob = document.getElementById('toggle-knob');
+      const track = knob.parentElement; // the pill background
+      const status = document.getElementById('alert-status');
+      checkbox.checked = enabled;
+
+      // Travel distance: track inner width (w-12 48px - p-1 8px) minus knob width (w-4 16px) = 24px
+      const travel = 'translateX(24px)';
+
+      if (enabled) {
+        status.textContent = 'Alerts are enabled.';
+        knob.style.transform = travel;
+        // Update track color using classes for reliability
+        track.classList.remove('bg-gray-700');
+        track.classList.add('bg-green-600');
+        track.style.backgroundColor = '';
+      } else {
+        status.textContent = 'Alerts are now disabled.';
+        knob.style.transform = 'translateX(0)';
+        track.classList.remove('bg-green-600');
+        track.classList.add('bg-gray-700');
+        track.style.backgroundColor = '';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Smooth return to the already-loaded dashboard without reload
+      const back = document.getElementById('back-to-dashboard');
+      if (back) {
+        back.addEventListener('click', (e) => {
+          e.preventDefault();
+          try { sessionStorage.setItem('skipSplash', '1'); } catch (_) {}
+          const sameOrigin = document.referrer && document.referrer.indexOf(location.origin) === 0;
+          const cameFromIndex = sameOrigin && /\/index\.html(\?|#|$)/.test(document.referrer);
+          if (cameFromIndex && history.length > 1) {
+            history.back();
+          } else {
+            // If no dashboard in history, fall back (will reload)
+            window.location.href = 'index.html';
+          }
+        });
+      }
+      firebase.auth().onAuthStateChanged((user) => {
+        if (!user || !user.emailVerified) {
+          window.location.replace('index.html');
+          return;
+        }
+        authedUser = user;
+        // Prefill display name
+        document.getElementById('display-name').value = user.displayName || '';
+      });
+
+      // Initialize alert toggle
+      try {
+        const enabled = typeof getAlertsEnabled === 'function' ? getAlertsEnabled() : true;
+        syncToggleUI(enabled);
+      } catch (e) { syncToggleUI(true); }
+
+      document.getElementById('alerts-toggle').addEventListener('change', (e) => {
+        const enabled = e.target.checked;
+        try {
+          if (typeof setAlertsEnabled === 'function') setAlertsEnabled(enabled);
+        } catch (_) {}
+        syncToggleUI(enabled);
+      });
+
+      // Save display name
+      document.getElementById('save-display-name').addEventListener('click', async () => {
+        const status = document.getElementById('account-status');
+        if (!authedUser) { setStatus(status, 'Not authenticated.', false); return; }
+        const displayName = document.getElementById('display-name').value.trim();
+        try {
+          await authedUser.updateProfile({ displayName });
+          setStatus(status, 'Display name updated.');
+        } catch (e) {
+          setStatus(status, 'Failed to update display name.', false);
+        }
+      });
+
+      // Change password via reset email
+      document.getElementById('change-password').addEventListener('click', async () => {
+        const status = document.getElementById('account-status');
+        if (!authedUser) { setStatus(status, 'Not authenticated.', false); return; }
+        try {
+          await firebase.auth().sendPasswordResetEmail(authedUser.email);
+          setStatus(status, 'Password reset email sent.');
+        } catch (e) {
+          setStatus(status, 'Failed to send password reset email.', false);
+        }
+      });
+    });
+  </script>
+</body>
+</html>

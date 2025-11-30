@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruؤya - Spider Robot Gas Monitoring System</title>
+    
+    <!-- External CSS -->
+    <link rel="stylesheet" href="styles.css">
+    <script>
+      // If returning from Profile/Settings, skip splash and resume dashboard
+      (function() {
+        try {
+          if (sessionStorage.getItem('skipSplash') === '1') {
+            document.documentElement.classList.add('skip-splash');
+            // Ensure auth listener sees splash as hidden (it checks the 'hidden' class)
+            document.addEventListener('DOMContentLoaded', function() {
+              var s = document.getElementById('splash-screen');
+              if (s && !s.classList.contains('hidden')) s.classList.add('hidden');
+              // Clear the flag so normal loads show splash again
+              try { sessionStorage.removeItem('skipSplash'); } catch (_) {}
+            });
+          }
+        } catch (_) {}
+      })();
+    </script>
+    <style>
+      /* Ensure Logout shows red hover in both themes */
+      #user-dropdown #logout-btn:hover {
+        color: var(--alert-red) !important;
+        background-color: rgba(239, 68, 68, 0.12) !important;
+      }
+      /* Skip-splash visuals when returning from subpages */
+      .skip-splash #splash-screen { display: none !important; }
+      .skip-splash #auth-page { display: none !important; }
+      .skip-splash #dashboard-page { display: block !important; }
+    </style>
+    
+    <!-- External Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Leaflet.js for interactive map visualization -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    <!-- html2canvas for exporting static images -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- Map provider handled via Google Maps iframe in monitoring.js -->
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+    
+</head>
+<body class="bg-black text-white font-sans overflow-x-hidden">
+
+    <!-- ==================== SPLASH SCREEN ==================== -->
+    <div id="splash-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black overflow-hidden">
+        <!-- Animated Tech Grid Background -->
+        <canvas id="tech-grid-canvas" class="absolute inset-0 w-full h-full"></canvas>
+
+        <!-- Content Layer (above canvas) -->
+        <div class="relative z-10 flex flex-col items-center">
+            <!-- Large Logo -->
+            <div class="logo-container pulse-web mb-8"></div>
+
+            <!-- App Title -->
+            <p class="text-xl md:text-2xl text-green-400 mb-6 text-center">Spider Robot Gas Monitoring</p>
+
+            <!-- Loading Animation -->
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 border-4 border-green-600 border-t-transparent rounded-full spin-slow"></div>
+                <span class="text-green-300 text-lg">Initializing System...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== AUTHENTICATION PAGE ==================== -->
+    <div id="auth-page" class="hidden min-h-screen flex items-center justify-center bg-gradient-to-br from-black via-green-900 to-black py-8">
+        <div class="bg-black bg-opacity-80 p-8 rounded-2xl shadow-2xl max-w-md w-full mx-4 border border-green-800">
+            <!-- Small Logo -->
+            <div class="flex justify-center mb-6">
+                <img id="auth-logo" src="logo.png" data-dark-logo="logo.png" data-light-logo="logo-light.png" alt="Ruya Logo" class="logo-img w-16 h-16 rounded-full object-cover"/>
+            </div>
+            
+            <h2 class="text-2xl font-bold text-center text-green-500 mb-6">Access Portal</h2>
+            
+            <!-- Login Form -->
+            <div id="login-section" class="">
+                <h3 class="text-lg font-semibold text-green-400 mb-4">Sign In</h3>
+                <form id="login-form" class="space-y-4">
+                    <input id="login-email" type="email" placeholder="Email Address" required 
+                           class="w-full p-3 rounded-lg bg-gray-900 border border-green-700 text-white placeholder-gray-400 focus:border-green-500 focus:outline-none">
+                    <div class="relative">
+                        <input id="login-password" type="password" placeholder="Password" required 
+                               class="w-full p-3 pr-12 rounded-lg bg-gray-900 border border-green-700 text-white placeholder-gray-400 focus:border-green-500 focus:outline-none">
+                        <button type="button" id="toggle-login-password" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white">
+                            <svg id="login-eye-open" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                            <svg id="login-eye-closed" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="hidden">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <label class="flex items-center space-x-2">
+                            <input type="checkbox" id="remember-me" class="text-green-600 bg-gray-900 border-green-700 rounded focus:ring-green-500">
+                            <span class="text-sm text-green-300">Remember Me</span>
+                        </label>
+                        <button type="button" id="forgot-password-btn" class="text-sm text-green-400 hover:text-green-300">
+                            Forgot Password?
+                        </button>
+                    </div>
+                    <button type="submit" id="login-submit-btn" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold transition-colors flex items-center justify-center">
+                        <span id="login-btn-text">Sign In</span>
+                        <div id="login-spinner" class="hidden ml-2 w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    </button>
+                </form>
+                <div id="login-error" class="hidden mt-3 p-3 bg-red-900 border border-red-700 rounded text-red-300 text-sm"></div>
+                
+                <!-- Don't have an account link -->
+                <div class="mt-6 text-center">
+                    <span class="text-gray-400 text-sm">Don't have an account? </span>
+                    <button id="show-signup-btn" class="text-green-400 hover:text-green-300 text-sm font-semibold transition-colors">
+                        Sign up
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Signup Form -->
+            <div id="signup-section" class="hidden">
+                <h3 class="text-lg font-semibold text-green-400 mb-4">Create Account</h3>
+                <form id="signup-form" class="space-y-4">
+                    <input id="signup-email" type="email" placeholder="Email Address" required 
+                           class="w-full p-3 rounded-lg bg-gray-900 border border-green-700 text-white placeholder-gray-400 focus:border-green-500 focus:outline-none">
+                    <div>
+                        <div class="relative">
+                            <input id="signup-password" type="password" placeholder="Password" required 
+                                   class="w-full p-3 pr-12 rounded-lg bg-gray-900 border border-green-700 text-white placeholder-gray-400 focus:border-green-500 focus:outline-none">
+                            <button type="button" id="toggle-signup-password" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white">
+                                <svg id="signup-eye-open" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                </svg>
+                                <svg id="signup-eye-closed" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="hidden">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="flex items-center mt-2 mb-2">
+                            <label class="text-sm text-green-300">Password Requirements:</label>
+                        </div>
+                        <div id="password-requirements" class="mt-2 space-y-1 text-xs">
+                            <div id="req-length" class="flex items-center text-gray-400">
+                                <span class="mr-2">○</span>8-30 characters
+                            </div>
+                            <div id="req-uppercase" class="flex items-center text-gray-400">
+                                <span class="mr-2">○</span>At least 1 uppercase letter
+                            </div>
+                            <div id="req-lowercase" class="flex items-center text-gray-400">
+                                <span class="mr-2">○</span>At least 1 lowercase letter
+                            </div>
+                            <div id="req-number" class="flex items-center text-gray-400">
+                                <span class="mr-2">○</span>At least 1 number
+                            </div>
+                            <div id="req-special" class="flex items-center text-gray-400">
+                                <span class="mr-2">○</span>At least 1 special character
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" id="signup-submit-btn" class="w-full bg-green-700 hover:bg-green-800 text-white py-3 rounded-lg font-semibold transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        <span id="signup-btn-text">Sign Up</span>
+                        <div id="signup-spinner" class="hidden ml-2 w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    </button>
+                </form>
+                <div id="signup-error" class="hidden mt-3 p-3 bg-red-900 border border-red-700 rounded text-red-300 text-sm"></div>
+                <div id="signup-success" class="hidden mt-3 p-3 bg-green-900 border border-green-700 rounded text-green-300 text-sm"></div>
+                
+                <!-- Already have an account link -->
+                <div class="mt-6 text-center">
+                    <span class="text-gray-400 text-sm">Already have an account? </span>
+                    <button id="show-login-btn" class="text-green-400 hover:text-green-300 text-sm font-semibold transition-colors">
+                        Sign in
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div id="forgot-password-modal" class="hidden fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center p-4">
+        <div class="bg-black bg-opacity-80 p-8 rounded-2xl shadow-2xl max-w-md w-full mx-4 border border-green-800">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-green-400">Reset Password</h3>
+                <button id="close-forgot-modal" class="text-gray-400 hover:text-white">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <form id="forgot-password-form" class="space-y-4">
+                <p class="text-green-300 text-sm mb-4">Enter your email address and we'll send you a link to reset your password.</p>
+                <input id="forgot-email" type="email" placeholder="Email Address" required 
+                       class="w-full p-3 rounded-lg bg-gray-900 border border-green-700 text-white placeholder-gray-400 focus:border-green-500 focus:outline-none">
+                <button type="submit" id="forgot-submit-btn" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold transition-colors flex items-center justify-center">
+                    <span id="forgot-btn-text">Send Reset Email</span>
+                    <div id="forgot-spinner" class="hidden ml-2 w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                </button>
+            </form>
+            <div id="forgot-error" class="hidden mt-3 p-3 bg-red-900 border border-red-700 rounded text-red-300 text-sm"></div>
+            <div id="forgot-success" class="hidden mt-3 p-3 bg-green-900 border border-green-700 rounded text-green-300 text-sm"></div>
+        </div>
+    </div>
+
+    <!-- ==================== DASHBOARD PAGE ==================== -->
+    <div id="dashboard-page" class="hidden min-h-screen bg-gradient-to-br from-black via-gray-900 to-green-900">
+        <!-- Header -->
+        <header class="bg-black bg-opacity-90 shadow-lg border-b border-green-800 sticky top-0 z-40">
+            <div class="flex items-center justify-between px-6 py-4 header-bar">
+                <div class="flex items-center space-x-3 header-left">
+                    <img id="dashboard-logo" src="logo.png" data-dark-logo="logo.png" data-light-logo="logo-light.png" alt="Ruya Logo" class="logo-img w-16 h-16"/>
+                    <h1 class="text-xl font-bold text-green-500 header-title">Dashboard</h1>
+                </div>
+                <!-- Mobile second-row left: nav toggle -->
+                <div class="mobile-nav-left">
+                    <button id="sidebar-toggle" class="md:hidden text-green-500 hover:text-green-400" aria-label="Toggle Navigation">
+                        <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="flex items-center space-x-4 header-actions">
+                    <div class="relative" id="user-menu">
+                        <button id="user-menu-button" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-green-900 transition-colors">
+                            <span id="user-email" class="text-green-300 text-sm hidden md:block"></span>
+                            <svg class="w-4 h-4 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <div id="user-dropdown" class="absolute right-0 mt-2 w-56 bg-black bg-opacity-95 border border-green-800 transform origin-top-right transition-all duration-150 ease-out hidden">
+                            <a href="profile.html" class="flex items-center px-4 py-2 text-green-300 hover:bg-green-900 transition-colors">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="8" r="3" stroke-width="2" />
+                                    <path d="M4 20a8 8 0 0116 0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                <span>Profile</span>
+                            </a>
+                            <a href="settings.html" class="flex items-center px-4 py-2 text-green-300 hover:bg-green-900 transition-colors">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <circle cx="12" cy="12" r="3" stroke-width="2" />
+                                    <circle cx="12" cy="12" r="7.5" stroke-width="2" />
+                                    <g stroke-width="2" stroke-linecap="round">
+                                        <line x1="12" y1="1.5" x2="12" y2="4.2" />
+                                        <line x1="12" y1="19.8" x2="12" y2="22.5" />
+                                        <line x1="1.5" y1="12" x2="4.2" y2="12" />
+                                        <line x1="19.8" y1="12" x2="22.5" y2="12" />
+                                        <line x1="5.2" y1="5.2" x2="7.1" y2="7.1" />
+                                        <line x1="16.9" y1="16.9" x2="18.8" y2="18.8" />
+                                        <line x1="18.8" y1="5.2" x2="16.9" y2="7.1" />
+                                        <line x1="7.1" y1="16.9" x2="5.2" y2="18.8" />
+                                    </g>
+                                </svg>
+                                <span>Settings</span>
+                            </a>
+                            <button id="logout-btn" class="w-full text-left flex items-center px-4 py-2 text-green-300 hover:bg-red-900 hover:text-red-300 transition-colors">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7M7 16v1a2 2 0 002 2h3m-5-7V5a2 2 0 012-2h3" />
+                                </svg>
+                                <span>Logout</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="theme-toggle" id="theme-toggle" title="Toggle Light/Dark Mode">
+                        <div class="theme-toggle-slider">🌙</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="flex">
+            <!-- Sidebar Navigation -->
+            <nav id="sidebar" class="fixed md:sticky inset-y-0 left-0 z-30 w-64 bg-black bg-opacity-90 transform -translate-x-full md:translate-x-0 sidebar-transition border-r border-green-800">
+                <div class="p-6">
+                    <h2 class="text-lg font-semibold text-green-400 mb-6">Navigation</h2>
+                    <ul class="space-y-3">
+                        <li>
+                            <a href="#overview" class="nav-link flex items-center px-4 py-2 text-green-300 hover:bg-green-900 rounded-lg transition-colors">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                                </svg>
+                                <span>Overview</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#readings" class="nav-link flex items-center px-4 py-2 text-green-300 hover:bg-green-900 rounded-lg transition-colors">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                </svg>
+                                <span>Gas Readings</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#live-location" class="nav-link flex items-center px-4 py-2 text-green-300 hover:bg-green-900 rounded-lg transition-colors">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2a7 7 0 00-7 7c0 5 7 11 7 11s7-6 7-11a7 7 0 00-7-7z" />
+                                    <circle cx="12" cy="9" r="2.5" stroke-width="2" />
+                                </svg>
+                                <span>Live Location</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#gas-visualization" class="nav-link flex items-center px-4 py-2 text-green-300 hover:bg-green-900 rounded-lg transition-colors">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
+                                </svg>
+                                <span>Gas Map</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#charts" class="nav-link flex items-center px-4 py-2 text-green-300 hover:bg-green-900 rounded-lg transition-colors">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path>
+                                </svg>
+                                <span>Historical Charts</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#alerts" class="nav-link flex items-center px-4 py-2 text-green-300 hover:bg-green-900 rounded-lg transition-colors">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                                </svg>
+                                <span>Alerts</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#thresholds" class="nav-link flex items-center px-4 py-2 text-green-300 hover:bg-green-900 rounded-lg transition-colors">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+                                </svg>
+                                <span>Thresholds</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#reports" class="nav-link flex items-center px-4 py-2 text-green-300 hover:bg-green-900 rounded-lg transition-colors">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                <span>Reports</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="flex-1 p-6 md:ml-0">
+                <!-- Overview Section -->
+                <section id="overview" class="mb-8">
+                    <h2 class="text-2xl font-bold text-green-400 mb-6">System Overview</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="bg-gray-900 bg-opacity-80 p-6 rounded-xl border border-green-800">
+                            <h3 class="text-lg font-semibold text-green-300 mb-2">Active Gases</h3>
+                            <p id="active-gases-count" class="text-3xl font-bold text-white">0</p>
+                        </div>
+                        <div class="bg-gray-900 bg-opacity-80 p-6 rounded-xl border border-green-800">
+                            <h3 class="text-lg font-semibold text-green-300 mb-2">Active Alerts</h3>
+                            <p id="active-alerts-count" class="text-3xl font-bold" style="color: var(--alert-red);">0</p>
+                        </div>
+                        <div class="bg-gray-900 bg-opacity-80 p-6 rounded-xl border border-green-800">
+                            <h3 class="text-lg font-semibold text-green-300 mb-2">System Status</h3>
+                            <p id="system-status" class="text-lg font-semibold text-green-400">Online</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Gas Readings Section -->
+                <section id="readings" class="mb-8">
+                    <h2 class="text-2xl font-bold text-green-400 mb-6">Latest Gas Readings</h2>
+                    <div id="gas-readings-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Gas reading cards will be dynamically generated here -->
+                    </div>
+                </section>
+
+                <!-- Live Location Section -->
+                <section id="live-location" class="mb-8">
+                    <h2 class="text-2xl font-bold text-green-400 mb-6">Live Location</h2>
+                    <div class="bg-gray-900 bg-opacity-80 p-6 rounded-xl border border-green-800 hover:shadow-lg transition-shadow">
+                        <div id="live-map" class="w-full" style="height: 340px; border-radius: 0.75rem; overflow: hidden;"></div>
+                        <div id="live-location-status" class="mt-4 text-sm text-gray-300"></div>
+                        <div id="live-location-place" class="mt-1 text-sm text-gray-300"></div>
+                    </div>
+                </section>
+
+                <!-- Interactive Gas Visualization Section -->
+                <section id="gas-visualization" class="mb-8">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+                        <h2 class="text-2xl font-bold text-green-400 mb-4 sm:mb-0">Interactive Gas Map</h2>
+                        <div class="flex gap-3 flex-wrap">
+                            <button id="export-heatmap-btn" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors flex items-center gap-2">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                </svg>
+                                Export Heatmap
+                            </button>
+                        </div>
+                    </div>
+                    <div class="bg-gray-900 bg-opacity-80 p-6 rounded-xl border border-green-800">
+                        <div id="gas-visualization-map" class="w-full" style="height: 600px; border-radius: 0.75rem; overflow: hidden;"></div>
+                        <div class="mt-4 flex flex-wrap items-center gap-4 text-sm">
+                            <div class="flex items-center gap-2">
+                                <span class="text-gray-400">Legend:</span>
+                            </div>
+                            <div id="gas-legend" class="flex flex-wrap items-center gap-3">
+                                <!-- Legend will be dynamically generated -->
+                            </div>
+                        </div>
+                        <div class="mt-2 text-xs text-gray-500">
+                            <p>• Markers and path use unified colors: Green (Safe &lt;60%), Orange (Caution 60-99%), Red (Alert ≥100%)</p>
+                            <p>• Colors are based on concentration relative to threshold</p>
+                            <p>• Click on markers to view timestamp</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Historical Charts Section -->
+                <section id="charts" class="mb-8">
+                    <h2 class="text-2xl font-bold text-green-400 mb-6">Historical Charts</h2>
+                    <div id="charts-container" class="space-y-6">
+                        <!-- Charts will be dynamically generated here -->
+                    </div>
+                </section>
+
+                <!-- Alerts Section -->
+                <section id="alerts" class="mb-8">
+                    <h2 class="text-2xl font-bold text-green-400 mb-6">Recent Alerts</h2>
+                    <div class="bg-gray-900 bg-opacity-80 p-6 rounded-xl border border-green-800">
+                        <div id="alerts-container" class="space-y-4 max-h-96 overflow-y-auto">
+                            <!-- Alert cards will be dynamically generated here -->
+                        </div>
+                        <div id="no-alerts-message" class="hidden text-gray-400 text-center py-8">No alerts to display</div>
+                    </div>
+                </section>
+
+                <!-- Thresholds Section -->
+                <section id="thresholds" class="mb-8">
+                    <h2 class="text-2xl font-bold text-green-400 mb-6">Gas Thresholds Configuration</h2>
+                    <div id="thresholds-container" class="space-y-4">
+                        <!-- Threshold controls will be dynamically generated here -->
+                    </div>
+                </section>               
+
+                <!-- Reports Section -->
+                <section id="reports" class="mb-8">
+                    <h2 class="text-2xl font-bold text-green-400 mb-6">PDF Report Generation</h2>
+                    <div class="bg-gray-900 bg-opacity-80 p-6 rounded-xl border border-green-800">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <h3 class="text-lg font-semibold text-green-300 mb-4">Report Options</h3>
+                                <div class="space-y-3">
+                                    <label class="flex items-center space-x-2">
+                                        <input type="checkbox" id="include-readings" checked class="text-green-600">
+                                        <span class="text-white">Include Latest Readings</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2">
+                                        <input type="checkbox" id="include-charts" checked class="text-green-600">
+                                        <span class="text-white">Include Historical Data</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2">
+                                        <input type="checkbox" id="include-alerts" checked class="text-green-600">
+                                        <span class="text-white">Include Alerts</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-green-300 mb-4">Generate Report</h3>
+                                <button id="generate-pdf-btn" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold transition-colors">
+                                    📄 Generate PDF Report
+                                </button>
+                                <div id="pdf-status" class="mt-3 text-sm text-gray-400"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+    <!-- ==================== ALERT MODAL ==================== -->
+    <div id="alert-modal" class="hidden fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center p-4">
+        <div class="alert-modal-container bg-gray-900 rounded-xl border-4 border-red-600 max-w-md w-full p-6 shadow-2xl">
+            <div class="flex items-center justify-center gap-3 mb-4">
+                <div class="alert-indicator"></div>
+                <h3 class="text-xl font-bold text-red-500">🚨 ALERT TRIGGERED</h3>
+                <div class="alert-indicator"></div>
+            </div>
+            <div class="text-center mb-4">
+                <p class="text-red-400 font-semibold text-sm">Acknowledgment Required</p>
+                <p id="queue-indicator" class="text-yellow-400 font-semibold text-xs mt-1 hidden"></p>
+            </div>
+            <div id="modal-content" class="space-y-3 bg-black bg-opacity-30 p-4 rounded-lg border border-red-900">
+                <!-- Modal content will be dynamically populated -->
+            </div>
+            <div class="mt-6">
+                <button id="acknowledge-alert-btn" class="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg transition-colors font-semibold text-lg shadow-lg">
+                    ✅ Acknowledge Alert
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== JAVASCRIPT ==================== -->
+    <script src="js/config.js"></script>
+    <script src="js/globals.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/theme.js"></script>
+    <script src="js/splash.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/monitoring.js"></script>
+    <script src="js/alerts.js"></script>
+    <script src="js/reports.js"></script>
+    <script src="js/visualization.js"></script>
+    <script src="js/main.js"></script>
+
+    <!-- Initialization handled in js/main.js -->
+
+    <!-- Toast container (created dynamically if missing) -->
+    <div id="toast" class="hidden fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-4 py-3 rounded-lg border border-green-700 shadow-lg z-50 flex items-center">
+        <span id="toast-message" class="mr-4"></span>
+        <button id="toast-action" class="text-green-400 underline hidden"></button>
+    </div>
+</body>
+</html>

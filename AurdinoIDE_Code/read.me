@@ -1,0 +1,45 @@
+# ESP32/Arduino Code for Ruya Project
+
+This folder contains the Arduino/ESP32 sketches for the Ruya project, which control the gas sensor robot, handle sensor calibration, and send real-time readings to the WebApp dashboard.
+
+## Files
+- `arduinoide_sketch.ino` – Main Arduino sketch that reads gas sensor data, connects to Wi-Fi, and sends readings to the WebApp.
+- `calibration_sketch.ino` – Sketch used for calibrating the gas sensor to ensure accurate PPM (parts per million) measurements.
+
+## Requirements
+- **Arduino IDE** installed on your computer.
+- **ESP32 Board Support** added in Arduino IDE.
+- ESP32 development board connected to your PC.
+- Gas sensor (e.g., MQ-6) properly connected to the ESP32.
+- Internet connection for the ESP32 to push readings to the WebApp or cloud backend.
+
+## How to Set Up
+
+### 1. Calibration
+1. Open `calibration_sketch.ino` in Arduino IDE.
+2. Connect the gas sensor to the ESP32 according to the circuit.
+3. Upload the sketch to your ESP32.
+4. Follow instructions in the serial monitor to calibrate the sensor.
+5. Note down calibration values if needed; these will be used in the main sketch.
+
+### 2. Main Sketch
+1. Open `arduinoide_sketch.ino` in Arduino IDE.
+2. Enter your Wi-Fi credentials in the sketch (SSID and password).
+3. Connect the gas sensor to the ESP32 as per the circuit.
+4. Select the correct ESP32 board and COM port under **Tools → Board** and **Tools → Port**.
+5. Click **Upload** to program the ESP32.
+
+## How It Works
+- The ESP32 reads analog values from the gas sensor and converts them to PPM using calibration values.
+- Readings are sent via Wi-Fi to the WebApp or Firebase backend.
+- Data can then be visualized in real-time on the WebApp dashboard.
+
+## Notes
+- Ensure the gas sensor is powered correctly and connected to the right pins.
+- ESP32 must be connected to the internet for the WebApp to receive readings.
+- Adjust the endpoint URLs in the sketches if your backend or WebApp URL changes.
+
+## Dependencies
+- Arduino IDE
+- WiFi library (included with ESP32 board support)
+- Optional: MQTT or HTTP library depending on your data push method

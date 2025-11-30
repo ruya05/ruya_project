@@ -1,0 +1,33 @@
+# Ruya Web Dashboard
+
+This folder contains the web application for the Ruya project, which provides a real-time dashboard to monitor gas sensor data from the ESP32 robot.
+
+## Folder Contents
+- `index.html` – Main dashboard page.
+- `style.css` – Custom CSS styles for the dashboard.
+- `leaflet.css` – Styles for the interactive map display.
+- `app.js` – JavaScript for fetching and displaying sensor data.
+- `setting.html` – Settings page for user configurations.
+- `profile.html` – User profile page.
+
+## How to Run Locally
+1. Open `index.html` in a web browser (Chrome or Firefox recommended).
+2. Ensure your browser can access the ESP32 server or the hosted Firebase backend.
+3. Interact with the dashboard to view gas concentration levels and timestamps on the map.
+
+## Deployment
+- This WebApp can be hosted on **Firebase Hosting** or any static web server.
+- If using Firebase:
+  1. Install Firebase CLI: `npm install -g firebase-tools`
+  2. Log in: `firebase login`
+  3. Initialize project: `firebase init` (select Hosting)
+  4. Deploy: `firebase deploy`
+
+## Dependencies
+- **Leaflet.js** – for interactive maps.
+- **Tailwind CSS** – for styling.
+- Internet connection to fetch live data from the ESP32 robot or cloud backend.
+
+## Notes
+- Make sure the ESP32 is running and sending data for the dashboard to display readings.
+- Adjust the API endpoints in `app.js` if your ESP32 server or Firebase backend URL changes.

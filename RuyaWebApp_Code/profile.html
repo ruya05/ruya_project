@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ru’ya • Profile</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <script src="js/theme.js"></script>
+  <script>try { applySavedTheme(); } catch(e) {}</script>
+</head>
+<body class="min-h-screen flex flex-col">
+  <header class="bg-black bg-opacity-90 border-b border-green-800">
+    <div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <img src="logo.png" data-dark-logo="logo.png" data-light-logo="logo-light.png" alt="Ruya Logo" class="logo-img w-12 h-12" />
+        <h1 class="text-xl font-bold text-green-500">Profile</h1>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1">
+    <div class="max-w-xl mx-auto p-6">
+      <div class="bg-gray-900 bg-opacity-80 p-8 rounded-2xl border border-green-800">
+        <div class="space-y-3">
+          <div class="flex justify-between">
+            <span class="text-gray-400">Email</span>
+            <span id="profile-email" class="text-white font-medium">--</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-400">Display Name</span>
+            <span id="profile-name" class="text-white font-medium">--</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-400">Last Login</span>
+            <span id="profile-last-login" class="text-white font-medium">--</span>
+          </div>
+        </div>
+      </div>
+      <div class="mt-6 text-center">
+        <a id="back-to-dashboard" href="index.html" class="inline-block bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg transition-colors">Back to Dashboard</a>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script>
+    // Apply saved theme on standalone page
+    try { applySavedTheme(); } catch (_) {}
+    // Redirect to dashboard if not signed in
+    document.addEventListener('DOMContentLoaded', () => {
+      // Smooth return to the already-loaded dashboard without reload
+      const back = document.getElementById('back-to-dashboard');
+      if (back) {
+        back.addEventListener('click', (e) => {
+          e.preventDefault();
+          try { sessionStorage.setItem('skipSplash', '1'); } catch (_) {}
+          const sameOrigin = document.referrer && document.referrer.indexOf(location.origin) === 0;
+          const cameFromIndex = sameOrigin && /\/index\.html(\?|#|$)/.test(document.referrer);
+          if (cameFromIndex && history.length > 1) {
+            history.back();
+          } else {
+            // If no dashboard in history, fall back (will reload)
+            window.location.href = 'index.html';
+          }
+        });
+      }
+      firebase.auth().onAuthStateChanged((user) => {
+        if (!user || !user.emailVerified) {
+          window.location.replace('index.html');
+          return;
+        }
+        const emailEl = document.getElementById('profile-email');
+        const nameEl = document.getElementById('profile-name');
+        emailEl.textContent = user.email || '--';
+        nameEl.textContent = user.displayName || 'Not Set';
+        try {
+          const last = user.metadata && user.metadata.lastSignInTime ? new Date(user.metadata.lastSignInTime).toLocaleString() : '--';
+          document.getElementById('profile-last-login').textContent = last;
+        } catch (e) {
+          document.getElementById('profile-last-login').textContent = '--';
+        }
+      });
+    });
+  </script>
+</body>
+</html>
