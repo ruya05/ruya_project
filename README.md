@@ -9,7 +9,7 @@
 | Team Member | Sondos el shatlawy | 7679336 | sae580@uowmail.edu.au |
 | Team Member | Nabiha Talat | 8028953 | nt613@uowmail.edu.au |
 
-the github will be spit into multiple branches as this project is a combination of multiple isolated parts,this is the VR side Branch.
+the github will be spit into multiple branches as this project is a combination of multiple isolated parts,this is the VR and JetHexa side Branch.
 
 ## Description 
 
