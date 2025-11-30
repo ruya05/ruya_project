@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agora Video Publisher</title>
+    <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.19.0.js"></script>
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1000.0.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .status {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status.loading {
+            background: #fff3cd;
+            color: #856404;
+            border: 2px solid #ffc107;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #28a745;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #dc3545;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .info-item {
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #667eea;
+            min-width: 140px;
+        }
+
+        .info-value {
+            color: #333;
+            font-family: 'Courier New', monospace;
+            background: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+
+        #local-video {
+            width: 100%;
+            max-width: 640px;
+            height: auto;
+            background: #000;
+            border-radius: 10px;
+            margin: 20px auto;
+            display: block;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button.primary {
+            background: #667eea;
+            color: white;
+        }
+
+        button.primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button.danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        button.danger:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🎥 Agora Video Publisher</h1>
+
+        <div id="status" class="status loading">
+            <div class="spinner"></div>
+            <span>Initializing...</span>
+        </div>
+
+        <div class="info">
+            <div class="info-item">
+                <span class="info-label">Robot ID:</span>
+                <span class="info-value" id="robot-id">jethexa_001</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Session Code:</span>
+                <span class="info-value" id="session-code">Loading...</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Channel:</span>
+                <span class="info-value" id="channel-name">Loading...</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Session Status:</span>
+                <span class="info-value" id="session-status">-</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Publishing:</span>
+                <span class="info-value" id="publish-status">Not Started</span>
+            </div>
+        </div>
+
+        <video id="local-video" autoplay playsinline muted></video>
+
+        <div class="controls">
+            <button class="danger" id="stop-btn" onclick="stopPublishing()" disabled>Stop Publishing</button>
+            <button class="primary" id="refresh-btn" onclick="refreshSession()" disabled>Refresh Session</button>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const APP_ID = 'YOUR_AGORA_APP_ID';
+        const ROBOT_ID = 'jethexa_001';
+
+        // AWS Configuration
+        const AWS_CONFIG = {
+            accessKeyId: 'YOUR_AWS_ACCESS_KEY_ID',
+            secretAccessKey: 'YOUR_AWS_SECRET_ACCESS_KEY',
+            region: 'ap-southeast-1'
+        };
+
+        // Configure AWS SDK
+        AWS.config.update(AWS_CONFIG);
+        const dynamodb = new AWS.DynamoDB.DocumentClient();
+
+        let agoraClient = null;
+        let localVideoTrack = null;
+        let localAudioTrack = null;
+        let currentSessionCode = null;
+
+        function updateStatus(message, type = 'loading') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = `status ${type}`;
+
+            if (type === 'loading') {
+                statusDiv.innerHTML = `<div class="spinner"></div><span>${message}</span>`;
+            } else if (type === 'success') {
+                statusDiv.innerHTML = `<span>✅ ${message}</span>`;
+            } else if (type === 'error') {
+                statusDiv.innerHTML = `<span>❌ ${message}</span>`;
+            }
+        }
+
+        async function getLatestSession() {
+            try {
+                updateStatus('Fetching latest session from DynamoDB...', 'loading');
+
+                // Scan DynamoDB for active sessions with our robot_id
+                const params = {
+                    TableName: 'robot_sessions',
+                    FilterExpression: 'robot_id = :robot_id AND #status = :status',
+                    ExpressionAttributeNames: {
+                        '#status': 'status'
+                    },
+                    ExpressionAttributeValues: {
+                        ':robot_id': ROBOT_ID,
+                        ':status': 'active'
+                    }
+                };
+
+                const result = await dynamodb.scan(params).promise();
+
+                if (!result.Items || result.Items.length === 0) {
+                    throw new Error('No active sessions found for this robot. Please start the robot first.');
+                }
+
+                // Sort by created_at to get the most recent session
+                const sessions = result.Items.sort((a, b) => b.created_at - a.created_at);
+                const latestSession = sessions[0];
+
+                // Check if session has expired
+                const currentTime = Date.now();
+                if (latestSession.expires_at && latestSession.expires_at < currentTime) {
+                    throw new Error('Latest session has expired. Please restart the robot.');
+                }
+
+                console.log('Latest session found:', latestSession);
+
+                return latestSession;
+
+            } catch (error) {
+                console.error('DynamoDB error:', error);
+                throw error;
+            }
+        }
+
+        async function startPublishing(channelName) {
+            try {
+                updateStatus('Initializing Agora...', 'loading');
+
+                // Create Agora client
+                agoraClient = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
+
+                updateStatus('Joining channel...', 'loading');
+
+                // Join the channel
+                await agoraClient.join(APP_ID, channelName, null, null);
+
+                updateStatus('Accessing camera and microphone...', 'loading');
+
+                // Create local tracks
+                [localAudioTrack, localVideoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks();
+
+                // Play local video
+                localVideoTrack.play('local-video');
+
+                updateStatus('Publishing video stream...', 'loading');
+
+                // Publish tracks to the channel
+                await agoraClient.publish([localAudioTrack, localVideoTrack]);
+
+                document.getElementById('publish-status').textContent = 'Active ✓';
+                document.getElementById('stop-btn').disabled = false;
+                document.getElementById('refresh-btn').disabled = false;
+
+                updateStatus('Successfully publishing video!', 'success');
+
+                console.log('Successfully published video to channel:', channelName);
+
+            } catch (error) {
+                console.error('Publishing error:', error);
+                updateStatus(`Error: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+
+        async function stopPublishing() {
+            try {
+                updateStatus('Stopping...', 'loading');
+
+                if (localVideoTrack) {
+                    localVideoTrack.stop();
+                    localVideoTrack.close();
+                }
+
+                if (localAudioTrack) {
+                    localAudioTrack.stop();
+                    localAudioTrack.close();
+                }
+
+                if (agoraClient) {
+                    await agoraClient.leave();
+                }
+
+                document.getElementById('publish-status').textContent = 'Stopped';
+                document.getElementById('stop-btn').disabled = true;
+
+                updateStatus('Publishing stopped', 'error');
+
+            } catch (error) {
+                console.error('Stop error:', error);
+                updateStatus('Error stopping', 'error');
+            }
+        }
+
+        async function refreshSession() {
+            try {
+                await stopPublishing();
+                await initialize();
+            } catch (error) {
+                console.error('Refresh error:', error);
+            }
+        }
+
+        async function initialize() {
+            try {
+                // Step 1: Get latest session from DynamoDB
+                const session = await getLatestSession();
+
+                currentSessionCode = session.session_code;
+                const channelName = session.agora_channel;
+
+                // Update UI
+                document.getElementById('session-code').textContent = session.session_code;
+                document.getElementById('channel-name').textContent = channelName;
+                document.getElementById('session-status').textContent = session.status;
+
+                // Calculate time remaining
+                const timeRemaining = Math.round((session.expires_at - Date.now()) / 1000 / 60);
+                console.log(`Session expires in ${timeRemaining} minutes`);
+
+                // Step 2: Start publishing
+                await startPublishing(channelName);
+
+            } catch (error) {
+                console.error('Initialization error:', error);
+                updateStatus(`Failed: ${error.message}`, 'error');
+                document.getElementById('refresh-btn').disabled = false;
+            }
+        }
+
+        // Auto-start on page load
+        window.addEventListener('load', initialize);
+
+        // Clean up on page unload
+        window.addEventListener('beforeunload', () => {
+            stopPublishing();
+        });
+    </script>
+</body>
+
+</html>

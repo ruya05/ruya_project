@@ -1,0 +1,6 @@
+firebase-admin
+requests
+numpy
+Pillow
+Adafruit-SSD1306
+Jetson.GPIO
