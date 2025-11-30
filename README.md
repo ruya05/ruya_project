@@ -105,7 +105,7 @@ Copy code
 1. Open `arduinoide_sketch.ino` in Arduino IDE
 2. Configure WiFi credentials:
 
-```cpp
+
 const char* ssid = "YOUR_WIFI_SSID";
 const char* password = "YOUR_WIFI_PASSWORD";
 Configure Firebase credentials in C++:
@@ -136,7 +136,7 @@ const firebaseConfig = {
 };
 Open index.html in a browser or deploy via Firebase Hosting
 
-Project Structure
+## Project Structure
 bash
 Copy code
 Ruya_WebandESP_Code/
@@ -152,54 +152,39 @@ Ruya_WebandESP_Code/
 │   ├── app.js                      # Main JS for Firebase fetching & charting
 │   └── config.js                   # Firebase configuration
 └── README.md                       # Project overview and instructions
-Usage Guide
-Power ESP32 with sensors connected
 
-Ensure ESP32 connects to WiFi and Firebase
-
-Open WebApp in a browser
-
-Live sensor readings and visual alerts appear automatically
-
-Use calibration_sketch.ino for sensor calibration if needed
+## Usage Guide
+- Power ESP32 with sensors connected
+- Ensure ESP32 connects to WiFi and Firebase
+- Open WebApp in a browser
+- Live sensor readings and visual alerts appear automatically
+- Use calibration_sketch.ino for sensor calibration if needed
 
 Dashboard Features:
+- Color-coded alerts for gas thresholds
+- Historical line charts with automatic refresh every 2 seconds
+- Multiple pages (index.html, setting.html, profile.html)
+- Supports multiple sensors simultaneously
 
-Color-coded alerts for gas thresholds
-
-Historical line charts with automatic refresh every 2 seconds
-
-Multiple pages (index.html, setting.html, profile.html)
-
-Supports multiple sensors simultaneously
-
-Configuration Parameters
+## Configuration Parameters
 Parameter	Default	Description
 sensorReadInterval	2000ms	Interval between sensor readings
 gasThresholds	See code	Thresholds for each gas sensor (PPM)
 wifiReconnectInterval	5000ms	Time before attempting WiFi reconnect
 firebaseWriteInterval	2000ms	Frequency of sending data to Firebase
 
-Security Considerations
+## Security Considerations
 Firebase rules restrict unauthorized writes
-
 ESP32 connects via WPA2-secured WiFi
-
 Only authorized WebApp clients can read live data
-
 API keys and credentials must not be exposed publicly
 
-Troubleshooting
+## Troubleshooting
 ESP32 Issues:
-
 Verify WiFi credentials
-
 Monitor serial output for errors
-
 Confirm Firebase database URL is correct
 
 WebApp Issues:
-
 No live data → Check Firebase config and database rules
-
 Charts not updating → Refresh browser, check console
