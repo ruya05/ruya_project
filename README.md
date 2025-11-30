@@ -59,10 +59,9 @@ The Ru’ya WebApp and ESP32 Arduino code provide real-time environmental monito
 
 ## System Architecture
 
-[ESP32 with Gas Sensors] --> WiFi --> [Firebase Realtime Database] --> [WebApp Dashboard]
+- [ESP32 with Gas Sensors] --> WiFi --> [Firebase Realtime Database] --> [WebApp Dashboard]
 
-markdown
-Copy code
+
 
 **Data Flow:**
 
@@ -102,8 +101,8 @@ Copy code
 
 ### ESP32 Setup
 
-- 1. Open `arduinoide_sketch.ino` in Arduino IDE
-- 2. Configure WiFi credentials
+- Open `arduinoide_sketch.ino` in Arduino IDE
+- Configure WiFi credentials
 - const char* ssid = "YOUR_WIFI_SSID";
 - const char* password = "YOUR_WIFI_PASSWORD";
 - Configure Firebase credentials in C++:
