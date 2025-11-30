@@ -1,4 +1,4 @@
-# RuYa by Team QIYAS (CSIT321) https://ruyabyqiyas.framer.website/
+# RuYa by Team QIYAS (CSIT321)
 
 | Role | Name | Student ID | Email |
 |------|------|------------|-------|
