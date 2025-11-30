@@ -1,150 +1,130 @@
-Ru’ya Gas-Sensing Robotic System
+# Ru’ya Gas-Sensing Robotic System
 
-Real-time monitoring and control system for the Ru’ya gas-sensing robotic platform.
-This repository contains the Web Application for live dashboard monitoring and the ESP32 Arduino code for gas sensor data acquisition and WiFi transmission.
+Real-time monitoring and control system for the Ru’ya gas-sensing robotic platform.  
+This repository contains the **Web Application** for live dashboard monitoring and the **ESP32 Arduino code** for gas sensor data acquisition and WiFi transmission.
 
-Table of Contents
+---
 
-Overview
+## Table of Contents
 
-Key Features
+- [Overview](#overview)
+- [Key Features](#key-features)
+- [System Architecture](#system-architecture)
+- [Technical Stack](#technical-stack)
+- [Setup Instructions](#setup-instructions)
+- [Project Structure](#project-structure)
+- [Usage Guide](#usage-guide)
+- [Configuration Parameters](#configuration-parameters)
+- [Security Considerations](#security-considerations)
+- [Troubleshooting](#troubleshooting)
 
-System Architecture
+---
 
-Technical Stack
-
-Setup Instructions
-
-Project Structure
-
-Usage Guide
-
-Configuration Parameters
-
-Security Considerations
-
-Troubleshooting
-
-Documentation & References
-
-License
-
-Overview
+## Overview
 
 The Ru’ya WebApp and ESP32 Arduino code provide real-time environmental monitoring and visualization for industrial inspection and gas leak detection.
 
-ESP32: Reads multiple MQ-series gas sensors (LPG, Propane, Butane, Methane), converts analog readings into PPM, and pushes them to Firebase using C++ code in Arduino IDE.
+**ESP32:** Reads multiple MQ-series gas sensors (LPG, Propane, Butane, Methane), converts analog readings into PPM, and pushes them to Firebase using C++ code in Arduino IDE.
 
-WebApp: Displays live sensor data, visual alerts, and historical trends using an interactive dashboard.
+**WebApp:** Displays live sensor data, visual alerts, and historical trends using an interactive dashboard.
 
-Use Cases:
+**Use Cases:**
 
-Pipeline inspection and industrial safety monitoring
+- Pipeline inspection and industrial safety monitoring
+- Remote site surveillance for hazardous environments
+- Emergency response and gas leak alerting
 
-Remote site surveillance for hazardous environments
+---
 
-Emergency response and gas leak alerting
+## Key Features
 
-Key Features
-Web Application
+### Web Application
 
-Real-time sensor data dashboard
+- Real-time sensor data dashboard
+- Threshold-based color-coded alerts (Green = Safe, Yellow = Caution, Red = Danger)
+- Multiple pages: `index.html`, `setting.html`, `profile.html`
+- Historical trend charts for gas sensor readings
+- Firebase Realtime Database integration for live updates
+- Responsive design for desktop and mobile
 
-Threshold-based color-coded alerts (Green = Safe, Yellow = Caution, Red = Danger)
+### ESP32 Arduino Code
 
-Multiple pages: index.html, setting.html, profile.html
+- Supports multiple MQ-series gas sensors (LPG, Propane, Butane, Methane)
+- Analog-to-PPM conversion implemented in C++
+- WiFi connectivity to send readings to Firebase
+- Includes calibration sketch (`calibration_sketch.ino`)
+- Handles network interruptions and reconnects automatically
 
-Historical trend charts for gas sensor readings
+---
 
-Firebase Realtime Database integration for live updates
+## System Architecture
 
-Responsive design for desktop and mobile
-
-ESP32 Arduino Code
-
-Supports multiple MQ-series gas sensors (LPG, Propane, Butane, Methane)
-
-Analog-to-PPM conversion implemented in C++
-
-WiFi connectivity to send readings to Firebase
-
-Includes calibration sketch (calibration_sketch.ino)
-
-Handles network interruptions and reconnects automatically
-
-System Architecture
 [ESP32 with Gas Sensors] --> WiFi --> [Firebase Realtime Database] --> [WebApp Dashboard]
 
+markdown
+Copy code
 
-Data Flow:
+**Data Flow:**
 
-ESP32 reads sensor data every 2 seconds
+1. ESP32 reads sensor data every 2 seconds  
+2. Converts analog readings to PPM in C++ code  
+3. Sends JSON-formatted data to Firebase  
+4. WebApp fetches live updates and visualizes readings  
 
-Converts analog readings to PPM in C++ code
+---
 
-Sends JSON-formatted data to Firebase
+## Technical Stack
 
-WebApp fetches live updates and visualizes readings
+**Web Application:**
 
-Technical Stack
+- HTML, CSS, JavaScript
+- Tailwind CSS / Bootstrap for responsive UI
+- Leaflet.js and leaflet.css for map integration (if applicable)
+- Chart.js for data visualization
+- Firebase Realtime Database
 
-Web Application:
+**ESP32 Arduino Code (C++):**
 
-HTML, CSS, JavaScript
+- Arduino IDE / PlatformIO
+- Libraries: WiFi, FirebaseESP32, MQ Sensor libraries
+- C++ for sensor reading, WiFi connectivity, and data push logic
 
-Tailwind CSS / Bootstrap for responsive UI
+---
 
-Leaflet.js and leaflet.css for map integration (if applicable)
+## Setup Instructions
 
-Chart.js for data visualization
+### Prerequisites
 
-Firebase Realtime Database
+- Arduino IDE or PlatformIO
+- ESP32 board package installed
+- Firebase project with Realtime Database
+- Node.js / npm (optional for WebApp development)
 
-ESP32 Arduino Code (C++):
+### ESP32 Setup
 
-Arduino IDE / PlatformIO
+1. Open `arduinoide_sketch.ino` in Arduino IDE
+2. Configure WiFi credentials:
 
-Libraries: WiFi, FirebaseESP32, MQ Sensor libraries
-
-C++ for sensor reading, WiFi connectivity, and data push logic
-
-Setup Instructions
-Prerequisites
-
-Arduino IDE or PlatformIO
-
-ESP32 board package installed
-
-Firebase project with Realtime Database
-
-Node.js / npm (optional for WebApp development)
-
-ESP32 Setup
-
-Open arduinoide_sketch.ino in Arduino IDE
-
-Configure WiFi credentials:
-
+```cpp
 const char* ssid = "YOUR_WIFI_SSID";
 const char* password = "YOUR_WIFI_PASSWORD";
-
-
 Configure Firebase credentials in C++:
 
+cpp
+Copy code
 #define FIREBASE_HOST "your-project-id.firebaseio.com"
 #define FIREBASE_AUTH "your-database-secret"
-
-
 Upload the sketch to ESP32
 
 Optional: Run calibration_sketch.ino for sensor calibration
 
 WebApp Setup
-
 Open the WebApp/ folder in your editor
 
 Configure Firebase in config.js:
 
+javascript
+Copy code
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
   authDomain: "your-project-id.firebaseapp.com",
@@ -154,11 +134,11 @@ const firebaseConfig = {
   messagingSenderId: "YOUR_SENDER_ID",
   appId: "YOUR_APP_ID"
 };
-
-
 Open index.html in a browser or deploy via Firebase Hosting
 
 Project Structure
+bash
+Copy code
 Ruya_WebandESP_Code/
 ├── ESP32_Code/
 │   ├── arduinoide_sketch.ino       # Main sensor reading and Firebase push code
@@ -172,9 +152,7 @@ Ruya_WebandESP_Code/
 │   ├── app.js                      # Main JS for Firebase fetching & charting
 │   └── config.js                   # Firebase configuration
 └── README.md                       # Project overview and instructions
-
 Usage Guide
-
 Power ESP32 with sensors connected
 
 Ensure ESP32 connects to WiFi and Firebase
@@ -201,8 +179,8 @@ sensorReadInterval	2000ms	Interval between sensor readings
 gasThresholds	See code	Thresholds for each gas sensor (PPM)
 wifiReconnectInterval	5000ms	Time before attempting WiFi reconnect
 firebaseWriteInterval	2000ms	Frequency of sending data to Firebase
-Security Considerations
 
+Security Considerations
 Firebase rules restrict unauthorized writes
 
 ESP32 connects via WPA2-secured WiFi
@@ -212,7 +190,6 @@ Only authorized WebApp clients can read live data
 API keys and credentials must not be exposed publicly
 
 Troubleshooting
-
 ESP32 Issues:
 
 Verify WiFi credentials
@@ -226,9 +203,3 @@ WebApp Issues:
 No live data → Check Firebase config and database rules
 
 Charts not updating → Refresh browser, check console
-
-Sensor Calibration:
-
-Use calibration_sketch.ino
-
-Ensure MQ sensors have correct load resistor and warm-up time
