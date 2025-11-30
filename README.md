@@ -13,7 +13,7 @@ the github will be spit into multiple branches as this project is a combination 
 
 ## Description 
 
-Real-time teleoperation of quadruped robot via Meta Quest Pro with secure cloud authentication, live video streaming, and environmental monitoring.
+Real-time teleoperation of hexapod robot via Meta Quest Pro with secure cloud authentication, live video streaming, and environmental monitoring.
 
 ![Unity](https://img.shields.io/badge/Unity-2021.3_LTS-black?style=flat-square&logo=unity)
 ![Meta Quest](https://img.shields.io/badge/Meta_Quest_Pro-Supported-blue?style=flat-square)
