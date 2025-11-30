@@ -23,7 +23,8 @@ Visit our official project website for more information:
 
 #### Full System Walkthrough
 
-[![VR Robot Control System - Complete Demo]]([https://www.youtube.com/watch?v=YOUR_VIDEO_ID](https://youtu.be/cALb3Sm70hU?si=P9bfIV_trY9b1TXi))
+[![VR Robot Control System - Complete Demo](https://img.youtube.com/vi/cALb3Sm70hU/0.jpg)](https://youtu.be/cALb3Sm70hU?si=P9bfIV_trY9b1TXi)
+
 
 **Video Contents:**
 - 0:00 - Introduction and system overview 
