@@ -11,6 +11,33 @@
 
 the github will be spit into multiple branches as this project is a combination of multiple isolated parts,this is the VR and JetHexa side Branch.
 
+## Demo
+
+### Project Website
+
+Visit our official project website for more information:
+
+**[RuYa VR Robot Control - Official Website](https://ruyabyqiyas.framer.website/)**
+
+### Video Demonstration
+
+#### Full System Walkthrough
+
+[![VR Robot Control System - Complete Demo](https://img.youtube.com/vi/YOUR_VIDEO_ID/maxresdefault.jpg)](https://www.youtube.com/watch?v=YOUR_VIDEO_ID)
+
+**Video Contents:**
+- 0:00 - Introduction and system overview 
+- 0:46 - Authentication with 6-digit code and the VR app
+- 1:15 - VR controller demonstration
+- 2:00 - Real-time video streaming
+- 2:45 - Gas sensor monitoring
+- 3:15 - Emergency stop features
+- 3:20 - Disconnect sequence
+- 3:40 - Shaowcasing Reporting Website
+- 10:30 - end
+
+**Duration:** 4:00
+
 ## Description 
 
 Real-time teleoperation of hexapod robot via Meta Quest Pro with secure cloud authentication, live video streaming, and environmental monitoring.
@@ -382,7 +409,7 @@ Dictionary<string, GasSensorData> GetAllGasData()
 
 - [DEPENDENCIES.md](Docs/DEPENDENCIES.md) - Complete SDK setup guide
 - [ARCHITECTURE.md](Docs/ARCHITECTURE.md) - Detailed system design
-- [AWS Lambda README](aws-lambda/README.md) - Backend deployment
+- [AWS Lambda README](aws_lamda/Readme.md) - Backend deployment
 
 ## Performance Metrics
 
