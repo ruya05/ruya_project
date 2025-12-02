@@ -37,7 +37,7 @@ Visit our official project website for more information:
 - 3:40 - Shaowcasing Reporting Website
 - 10:30 - end
 
-**Duration:** 4:00
+**Duration:** 10:00
 
 ## Description 
 
